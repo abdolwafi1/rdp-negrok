@@ -1,0 +1,31 @@
+name: Windows RDP via Ngrok
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 1440
+
+    steps:
+    - name: Download Ngrok
+      run: |
+        Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
+        Expand-Archive ngrok.zip
+
+    - name: Authenticate Ngrok
+      run: |
+        .\ngrok\ngrok.exe authtoken 2zKMuIv9QHKXmwFuIJQCe6uf66z_Cvoyma7EMxPhsGEHPEqS
+
+    - name: Start RDP
+      run: |
+        net user Abdo 123456 /add
+        net localgroup administrators Abdo /add
+        netsh advfirewall firewall set rule group="remote desktop" new enable=Yes
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+        .\ngrok\ngrok.exe tcp 3389
+
+    - name: Show Info
+      run: |
+        echo RDP is ready. User: Abdo Password: 123456
